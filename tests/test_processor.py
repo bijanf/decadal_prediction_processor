@@ -15,8 +15,8 @@ def test_process_files(tmp_path):
     file2 = tmp_path / "tas_Amon_MPI-ESM-LR_dkfen42018_r7i2p1_201811-203812.nc"
 
     # Create dummy data with non-overlapping time coordinates
-    time1 = pd.date_range("2019-11-01", periods=24, freq="M")  # 2019-11 to 2021-10
-    time2 = pd.date_range("2021-11-01", periods=24, freq="M")  # 2021-11 to 2023-10
+    time1 = pd.date_range("2019-11-01", periods=24, freq="ME")  # 2019-11 to 2021-10
+    time2 = pd.date_range("2021-11-01", periods=24, freq="ME")  # 2021-11 to 2023-10
 
     ds1 = xr.Dataset(
         {"tas": (["time", "lat", "lon"], np.random.rand(24, 10, 10))},
