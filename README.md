@@ -1,5 +1,6 @@
 # Decadal Prediction Processor
 ![CI](https://github.com/bijanf/decadal_prediction_processor/actions/workflows/ci.yml/badge.svg)
+[![License](https://img.shields.io/badge/License-BSD-purple.svg)](LICENSE)
 
 This project processes decadal prediction NetCDF files to extract monthly values with dimensions: `time`, `lead_year`, `initialization_year`, `lat`, and `lon`.
 
