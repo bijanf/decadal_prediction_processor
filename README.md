@@ -20,7 +20,10 @@ This project processes decadal prediction NetCDF files to extract monthly values
 
 2. Install dependencies:
     ```bash
-    pip install -r requirements.txt
+     mamba env create -f environment.yml
+     conda activate decadal_prediction_processor
+     pip install tox
+     tox 
     ```
 
 ## Usage 
@@ -46,8 +49,6 @@ Run tests using:
 ```bash 
     python -m pytest tests/
 ```
-
-Run tests using:
 ## License 
 
 MIT License 
