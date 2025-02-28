@@ -53,3 +53,5 @@ Run tests using:
 ## License 
 
 MIT License 
+## TODOS: 
+- finish the tests
