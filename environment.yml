@@ -9,5 +9,6 @@ dependencies:
   - dask
   - pytest
   - pip
+  - freva
   - pip:
       - tox

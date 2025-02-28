@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from src.utils import validate_files

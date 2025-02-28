@@ -8,3 +8,4 @@ isort
 mypy
 types-python-dateutil
 tox
+freva

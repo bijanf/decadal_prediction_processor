@@ -1,3 +1,5 @@
+"""Utility functions for processing climate data."""
+
 import os
 from typing import List
 
