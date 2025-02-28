@@ -1,5 +1,6 @@
-xarray==2023.7.0
-netCDF4==1.6.4
+xarray
+netCDF4
 numpy==1.24.3
-dask==2023.7.0
-pytest==7.4.0
+dask
+pytest
+tox

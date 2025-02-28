@@ -1,6 +1,9 @@
-import pytest
 import os
+
+import pytest
+
 from src.utils import validate_files
+
 
 def test_validate_files(tmp_path):
     # Create a dummy file

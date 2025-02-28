@@ -1,4 +1,6 @@
 import os
+from typing import List
+
 
 def validate_files(files: List[str]) -> None:
     """

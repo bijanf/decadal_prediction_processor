@@ -22,8 +22,7 @@ This project processes decadal prediction NetCDF files to extract monthly values
     ```bash
      mamba env create -f environment.yml
      conda activate decadal_prediction_processor
-     pip install tox
-     tox 
+     
     ```
 
 ## Usage 
@@ -47,7 +46,8 @@ The output file will contain:
 ## Tests
 Run tests using:
 ```bash 
-    python -m pytest tests/
+    pip install tox
+    tox 
 ```
 ## License 
 
