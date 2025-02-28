@@ -1,0 +1,13 @@
+name: decadal_prediction_processor
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8
+  - xarray
+  - netCDF4
+  - numpy
+  - dask
+  - pytest
+  - pip
+  - pip:
+      - tox
