@@ -51,6 +51,12 @@ Run tests using:
     pip install tox
     tox 
 ```
+## run plot testing 
+```python
+python plot_time_series.py
+```
+![image](full_12_month_lead_time_blocks.png)
+
 ## License 
 
 MIT License 
