@@ -27,51 +27,41 @@ for i, init_year in enumerate(ds["initialization_year"]):
         block = lead_times[block_start:block_start + 12]
         tas_block = fldmean_tas.sel(initialization_year=init_year, lead_time=block).values
         
-        # Determine the number of months in this block
-        num_months = len(tas_block)
-        
-        # Create the x-axis values for this block
-        if block_start == 0:  # First block (November and December only)
-            months = np.arange(11, 11 + num_months)  # November (11) to December (12)
-        else:  # Subsequent blocks (full 12-month blocks starting from January)
-            months = np.arange(1, 13)  # January (1) to December (12)
+        # Skip the block if it has fewer than 12 months (incomplete run)
+        if len(tas_block) < 12:
+            continue
         
         # If the year is not in the dictionary, initialize it with an empty list
         if year not in yearly_data:
             yearly_data[year] = []
         
-        # Append the tas values and months for this block to the corresponding year
-        yearly_data[year].append((months, tas_block))
+        # Append the tas values for this block to the corresponding year
+        yearly_data[year].append(tas_block)
 
 # Prepare data for plotting
 years = sorted(yearly_data.keys())
+months = np.arange(1, 13)  # Months from 1 to 12
 
 # Plot the monthly values for each year
 plt.figure(figsize=(14, 7))
 
-for year in years:
+for year in years[0:10]:# 10 years 
     # Extract the blocks for this year
-    blocks = yearly_data[year]
+    tas_blocks = yearly_data[year]
     
     # Plot each block as a separate line
-    for i, (months, tas_block) in enumerate(blocks):
+    for i, tas_block in enumerate(tas_blocks):
         plt.plot(
             [year + (month - 1) / 12 for month in months],
-            tas_block,
-            marker="o",
-            label=f"{year} (Block {i + 1})"
+            tas_block, "k-", alpha=.5
         )
 
 # Add labels and title
 plt.xlabel("Year")
 plt.ylabel("Field Mean of tas (K)")
-plt.title("Lead Time Blocks Across Initialization Years")
-
-# Add a legend
-plt.legend()
 
 # Save the plot without extra whitespace
-output_plot_path = "lead_time_blocks.png"
+output_plot_path = "full_12_month_lead_time_blocks.png"
 plt.savefig(output_plot_path, bbox_inches="tight", pad_inches=0, dpi=300)
 
 print(f"Plot saved to {output_plot_path}")
