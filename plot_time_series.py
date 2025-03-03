@@ -45,7 +45,7 @@ months = np.arange(1, 13)  # Months from 1 to 12
 # Plot the monthly values for each year
 plt.figure(figsize=(14, 7))
 
-for year in years[0:10]:# 10 years 
+for year in years:
     # Extract the blocks for this year
     tas_blocks = yearly_data[year]
     

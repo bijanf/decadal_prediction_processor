@@ -10,3 +10,5 @@ types-python-dateutil
 tox
 freva
 cftime
+xesmf
+esmpy
