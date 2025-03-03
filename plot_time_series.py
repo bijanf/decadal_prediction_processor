@@ -3,20 +3,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# Load the NetCDF file with decode_times=False
+# Load the NetCDF file
 file_path = "/work/kd1418/codes/work/k202196/MYWORK/output_file.nc"
-ds = xr.open_dataset(file_path, decode_times=False)
+ds = xr.open_dataset(file_path)
 
-# Compute the global mean (fldmean) for each initialization_year
+# Compute the global mean (fldmean) for each initialization
 fldmean_tas = ds["tas"].mean(dim=["lat", "lon"])
 
 # Create a dictionary to store data for each year
 yearly_data = {}
 
-# Iterate over each initialization_year and extract the relevant lead_time blocks
-for i, init_year in enumerate(ds["initialization_year"]):
-    # Get the lead_time values for this initialization_year
-    lead_times = fldmean_tas.sel(initialization_year=init_year)["lead_time"].values
+# Iterate over each initialization and extract the relevant lead_time blocks
+for i, init_year in enumerate(ds["initialization"]):
+    # Get the lead_time values for this initialization
+    lead_times = fldmean_tas.sel(initialization=init_year)["lead_time"].values
     
     # Iterate over each lead_time block
     for block_start in range(0, len(lead_times), 12):
@@ -25,7 +25,7 @@ for i, init_year in enumerate(ds["initialization_year"]):
         
         # Extract the block (may be less than 12 months for the first block)
         block = lead_times[block_start:block_start + 12]
-        tas_block = fldmean_tas.sel(initialization_year=init_year, lead_time=block).values
+        tas_block = fldmean_tas.sel(initialization=init_year, lead_time=block).values
         
         # Skip the block if it has fewer than 12 months (incomplete run)
         if len(tas_block) < 12:
@@ -53,12 +53,13 @@ for year in years:
     for i, tas_block in enumerate(tas_blocks):
         plt.plot(
             [year + (month - 1) / 12 for month in months],
-            tas_block, "k-", alpha=.5
+            tas_block, "k-", alpha=0.5
         )
 
 # Add labels and title
 plt.xlabel("Year")
 plt.ylabel("Field Mean of tas (K)")
+plt.title("Monthly Field Mean of tas for Each Initialization")
 
 # Save the plot without extra whitespace
 output_plot_path = "full_12_month_lead_time_blocks.png"
