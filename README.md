@@ -62,9 +62,9 @@ pyplot_global_mean_tas(
     )
 
 ```
-- First 2 lead years: 
+- First 1 lead years: 
 
-![image](first_2_lead_years_with_mean.png)
+![image](first_1_lead_years_with_mean.png)
 
 - Full lead years: 
 
