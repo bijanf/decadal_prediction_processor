@@ -9,6 +9,44 @@ import pandas as pd
 import xarray as xr
 
 
+def shift_initialization_time(nc_file: str, output_file: str) -> None:
+    """
+    Shifts the initialization time from January (01) to November (11)
+    in a NetCDF file.
+    """
+    print(f"🔄 Shifting initialization time in {nc_file}")
+
+    ds = xr.open_dataset(nc_file)
+
+    if "initialization" in ds.coords:
+        # Convert initialization years to full dates (YYYY-01-01)
+        init_years = ds["initialization"].values
+        init_dates = pd.to_datetime([f"{year}-01-01" for year in init_years])
+
+        # Shift by -2 months (from January to November of previous year)
+        shifted_dates = init_dates - pd.DateOffset(months=2)
+
+        # Convert back to CFTime objects for NetCDF compatibility
+        shifted_dates_cftime = [
+            cftime.DatetimeProlepticGregorian(date.year, date.month, date.day)
+            for date in shifted_dates
+        ]
+
+        # Assign the shifted values
+        ds = ds.assign_coords(
+            initialization=("initialization", shifted_dates_cftime)
+        )
+
+        # Save the modified dataset
+        ds.to_netcdf(output_file)
+        print(f"✅ Shifted initialization times saved to {output_file}")
+
+    else:
+        print("⚠️ No 'initialization' coordinate found in the dataset!")
+
+    ds.close()
+
+
 def find_nc_files(
     experiment: str,
     project: str, time_frequency: str, variable: str, ensemble: str
@@ -74,6 +112,7 @@ def subtract_climatology(
     """
     Subtracts the monthly climatology from the input dataset.
     - Replaces 'time' with 'lead_time' (1 to 122).
+    - Adjusts the time axis to start from November (YYYY-11-01).
     - Returns the anomalies as an xarray Dataset.
     """
     print(f"📉 Subtracting monthly climatology for {input_file}")
@@ -94,6 +133,9 @@ def subtract_climatology(
         base_time_str = time_units.split("since")[-1].strip()
         base_date = pd.to_datetime(base_time_str)
 
+        # Adjust the base date to start from November (YYYY-11-01)
+        base_date = base_date.replace(month=11, day=1)
+
         time_values = [
             base_date + pd.DateOffset(months=int(t)) for t in time_var.values
         ]
@@ -109,13 +151,14 @@ def subtract_climatology(
     anomalies = np.zeros_like(ds[variable].values)
     for i, month in enumerate(ds_months):
         clim_month = clim[variable].isel(
-            time=month - 1
+            time=month - 1  # Climatology file is assumed to have months 1-12
         )
         anomalies[i] = ds[variable].isel(time=i).values - clim_month.values
 
     ds_anomalies = ds.copy()
     ds_anomalies[variable].values = anomalies
 
+    # Replace 'time' with 'lead_time' (1 to 122)
     ds_anomalies = ds_anomalies.assign_coords(
         lead_time=("time", np.arange(1, len(ds_anomalies.time) + 1))
     ).drop_vars("time")
