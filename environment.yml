@@ -10,5 +10,6 @@ dependencies:
   - pytest
   - pip
   - freva
+  - matplotlib
   - pip:
       - tox

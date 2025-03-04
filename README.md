@@ -36,7 +36,7 @@ This project processes decadal prediction NetCDF files to extract monthly values
 3. Run the script:
 
     ```bash 
-        python -m pytest tests/
+        python run.py
     ```
 ## Output
 
