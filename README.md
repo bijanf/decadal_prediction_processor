@@ -53,10 +53,22 @@ Run tests using:
 ```
 ## run plot testing 
 ```python
-python plot_time_series.py
-```
-![image](full_12_month_lead_time_blocks.png)
+from src.plot_time_series import plot_global_mean_tas
 
+pyplot_global_mean_tas(
+        "/work/kd1418/codes/work/k202196/MYWORK/tas_Amon_MPI-ESM-LR_dkfen41979-2021_r26i2p1.nc",
+        num_lead_years=2,
+        output_plot=f"first_2_lead_years_with_mean.png",
+    )
+
+```
+- First 2 lead years: 
+
+![image](first_2_lead_years_with_mean.png)
+
+- Full lead years: 
+
+![image](first_11_lead_years_with_mean.png)
 ## License 
 
 MIT License 
