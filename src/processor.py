@@ -7,6 +7,7 @@ import freva
 import numpy as np
 import pandas as pd
 import xarray as xr
+from tqdm import tqdm
 
 
 def shift_initialization_time(nc_file: str, output_file: str) -> None:
@@ -149,7 +150,10 @@ def subtract_climatology(
 
     ds_months = ds["time"].dt.month
     anomalies = np.zeros_like(ds[variable].values)
-    for i, month in enumerate(ds_months):
+    
+    # Add progress bar for climatology subtraction
+    print("\n🔄 Subtracting climatology for each timestep:")
+    for i, month in enumerate(tqdm(ds_months, desc="Processing timesteps", unit="step")):
         clim_month = clim[variable].isel(
             time=month - 1  # Climatology file is assumed to have months 1-12
         )
@@ -229,54 +233,125 @@ def extract_years_from_file(file: str) -> List[int]:
         raise
 
 
+def find_nc_files_manual(directory: str, pattern: str = "*.nc") -> List[str]:
+    """Finds NetCDF files in a directory manually.
+    
+    Args:
+        directory: Path to the directory containing NetCDF files
+        pattern: File pattern to match (default: "*.nc")
+        
+    Returns:
+        List of file paths
+    """
+    print(f"🔍 Searching for NetCDF files in directory: {directory}")
+    
+    import glob
+    import os
+    
+    # Ensure the path ends with a separator
+    directory = os.path.join(directory, "")
+    
+    # Find all matching files
+    search_pattern = os.path.join(directory, pattern)
+    results = glob.glob(search_pattern)
+    
+    if not results:
+        print("⚠️ Warning: No files found in the given directory.")
+    else:
+        print(f"✅ Found {len(results)} files.")
+    
+    return sorted(results)
+
+
 def process_files(
-    experiment: str,
-    project: str,
-    time_frequency: str,
-    variable: str,
-    ensemble: str,
     output_file: str,
-    climatology_file: str,
     output_dir: str,
     cleanup: bool = False,
+    # Freva search parameters (optional)
+    experiment: str = None,
+    project: str = None,
+    time_frequency: str = None,
+    variable: str = None,
+    ensemble: str = None,
+    # Manual directory search parameters (optional)
+    input_directory: str = None,
+    file_pattern: str = "*.nc",
+    # Climatology parameters (optional)
+    climatology_file: str = None,
+    subtract_clim: bool = True,
 ) -> None:
     """
-    Processes NetCDF files into a 4D dataset
-    (initialization, lead_time, lat, lon),
-    ensuring climatology is correctly adjusted before subtraction.
+    Processes NetCDF files into a 4D dataset (initialization, lead_time, lat, lon).
+    Files can be found either using Freva databrowser or by specifying a directory.
+    Climatology subtraction is optional.
+
+    Args:
+        output_file: Path to save the final processed file
+        output_dir: Directory to store intermediate files
+        cleanup: Whether to remove intermediate files
+        experiment: (Freva) Experiment name
+        project: (Freva) Project name
+        time_frequency: (Freva) Time frequency
+        variable: (Freva) Variable name
+        ensemble: (Freva) Ensemble member
+        input_directory: Directory containing NetCDF files (for manual search)
+        file_pattern: Pattern to match files when using manual search
+        climatology_file: Path to climatology file (required if subtract_clim=True)
+        subtract_clim: Whether to subtract climatology (default: True)
     """
-    files = find_nc_files(
-        experiment,
-        project,
-        time_frequency,
-        variable,
-        ensemble)
+    # Find input files
+    if input_directory is not None:
+        files = find_nc_files_manual(input_directory, file_pattern)
+    elif all([experiment, project, time_frequency, variable, ensemble]):
+        files = find_nc_files(
+            experiment,
+            project,
+            time_frequency,
+            variable,
+            ensemble)
+    else:
+        raise ValueError(
+            "Either input_directory or all Freva parameters must be provided"
+        )
+
     if not files:
         print("❌ No NetCDF files found. Exiting.")
         return
 
     os.makedirs(output_dir, exist_ok=True)
 
-    adjusted_climatology = os.path.join(output_dir, "adjusted_climatology.nc")
-    adjust_climatology(climatology_file, files[0], adjusted_climatology)
+    # Process climatology if needed
+    if subtract_clim:
+        if not climatology_file:
+            raise ValueError(
+                "climatology_file must be provided when subtract_clim=True"
+            )
+        adjusted_climatology = os.path.join(output_dir, "adjusted_climatology.nc")
+        adjust_climatology(climatology_file, files[0], adjusted_climatology)
 
     anomaly_files = []
     years = []
-    for file in files:
-        anomaly_file = os.path.join(
-            output_dir, os.path.basename(file).replace(".nc", "_anomaly.nc")
-        )
-        ds_anomalies = subtract_climatology(
-            file, adjusted_climatology, anomaly_file, variable
-        )
-
-        print(f"📊 {file} has {len(ds_anomalies.time)} time steps")
+    
+    # Add progress bar for file processing
+    print("\n🔄 Processing files:")
+    for file in tqdm(files, desc="Processing files", unit="file"):
+        if subtract_clim:
+            anomaly_file = os.path.join(
+                output_dir, 
+                os.path.basename(file).replace(".nc", "_anomaly.nc")
+            )
+            ds_anomalies = subtract_climatology(
+                file, adjusted_climatology, anomaly_file, variable
+            )
+        else:
+            # If not subtracting climatology, just open the file directly
+            ds_anomalies = xr.open_dataset(file)
 
         anomaly_files.append(ds_anomalies)
         file_years = extract_years_from_file(file)
         years.append(file_years[0])
 
-    print(f"📊 Extracted years: {years}")
+    print(f"\n📊 Extracted years: {years}")
 
     unique_time_steps = {len(ds.time) for ds in anomaly_files}
     print(f"📊 Unique time step counts in anomaly files: {unique_time_steps}")
@@ -330,5 +405,6 @@ def process_files(
         print("🧹 Cleaning up intermediate files...")
         for file in anomaly_files:
             os.remove(file)
-        os.remove(adjusted_climatology)
+        if subtract_clim:
+            os.remove(adjusted_climatology)
         print("✅ Intermediate files removed.")
